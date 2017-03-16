@@ -1,0 +1,110 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%2345678901234567890123456789012345678901234567890123456789012345678901234567890
+%        1         2         3         4         5         6         7         8
+
+\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out if you need a4paper
+
+%\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4 paper
+
+\IEEEoverridecommandlockouts                              % This command is only needed if 
+                                                          % you want to use the \thanks command
+
+\overrideIEEEmargins                                      % Needed to meet printer requirements.
+
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{amsmath}
+\usepackage{lipsum}
+\usepackage{hyperref}
+
+\usepackage{graphicx}
+\graphicspath{ {img/} }
+
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+
+\title{
+Autonomous Forklift : Literature Search
+}
+
+
+\author{
+Gudjon Einar Magnusson
+\\ \href{mailto:gmagnusson@fc-md.umd.edu}{\tt\small gmagnusson@fc-md.umd.edu}
+}
+
+
+\begin{document}
+
+
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+
+Task planners tend to have an overly simplified view of the world. Motion planners are short sighted and fail to see the big picture. I propose to implement a planner that integrates task and motion planning to produce better plans in a semi structured environment. 
+
+\end{abstract}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+Task planning and motion planning are both mature fields that offer a verity of advanced algorithms to solve their respective problems. However, when we try to implements robots to carry out increasingly complex tasks it becomes clear that there is much room for improvement in the interaction between these two domains. 
+
+Task planners can find a long sequence of actions to carry out a task under complex logical constraints. These planner abstract away the properties of the physical world they operate in, they fail to consider how actions may affect the robots configuration space.
+
+Motion planners can find a optimal or near optimal path to move a physical object through space while avoiding collisions and respecting dynamic constraints. They generally operate over the time scale of a single task and fail to consider how the current motion may interferer with future tasks.
+
+Currently, in production environments these problems are avoided by structuring the robots environments such that the robots motion and geometry does not interferer with task planning and the simplified assumptions made by the task planner generally hold. That way you can get away with using the task planner to get a sequence of actions and calling the motion planner once per action to carry it out, and not worry about any interference between the two. However, if we want future robots to be able to carry out sophisticated tasks in unstructured or semi-structured environments, we need to develop methods that are more cognizant during the planning and execution of actions.
+
+
+\label{related_work}
+\section{Related Work}
+
+This implementation combines two problems that each has a lot of related literature. The first is motion planning for nonholonomic vehicles, such as cars that can not travel in any direction and can not turn on the spot. The second is the problem of integrated task and motion planning (TAMP). This problem comes up when a robot tries to plan and execute a long sequence of actions in an unstructured space. An action may change the configuration space in such a way that it interferes with later actions. This problem comes in many flavors and is related to the problem of manipulation planning and navigation among movable obstacles (NAMO). 
+
+In this section I will discuss some of the related work for each of these problems separately.
+
+\subsection{Task and motion planning (TAMP)}
+
+A verity of methods have been proposed to tackle some aspect of this problem, but there are no obvious solutions that can be directly applied. 
+\cite{hpn2} describes a robot that moves a number of object around a confined space while making sure those objects stay out of the sweep area of future actions. \cite{waipointSequence} describes how a motion planner can use knowledge of the task plan to optimize the path chosen for the current task so the motion forms a more continuous sequence. \cite{asymov} describes a planner that bridges the gap between symbolic and geometric reasoning so that the task planner can deal with geometric preconditions and effects of actions. \cite{ffrob} proposes a heuristic method for efficient forward search task planning while taking geometric and kinematic constraints into account.
+
+Based on my preliminary research it seams that aSyMov\cite{asymov}\cite{asymov2} is the most mature implementation that directly deals with this specific problem. 
+
+
+\subsection{Motion planning for nonholonomic vehicles}
+
+For motion planning in high dimensional configuration spaces, rapidly-exploring random trees (RRT) is commonly used. The basic implementation does not offer an optimal solution or account for dynamic constraints of the vehicle, but there are many extensions that offer those properties.
+
+Another approach is to probabilistic road-maps (PRM). PRM's are best suited for scenarios where the same environment is queried multiple times and routs are often reused.
+
+Since the forklift is designed to operate in a semi-structured environment where a floor map is provided, but obstacles may be placed anywhere, a mix of graph search and random sampling methods could be used for motion planning. A precomputed graph can be searched to find paths over long distances while RRT can be used locally find paths around obstacles or to interact with dynamic objects in the environment. \cite{prm_rrt} proposes a method of combining PRM and RRT to gain a significant performance boost when querying the same environment multiple times, while maintaining flexibility of RRT.
+\cite{hentschel07} describes and implementation that uses a set of predefined way-points to plan a route. After a sequence of way-points have been choose a smooth curve is computed to account for the vehicles dynamic constraints. This a method provides a deterministic behavior that desirable in safety critical domains.
+
+\section{Conclusion}
+
+I have laid out an ambitious plan to implement an intelligent, autonomous fork-lift, operating in a complicated environment. My plan is demonstrate all of the concepts I explained above, but I  recognize that every plan is likely to change on its first encounter with implementation. Luckily I think that the fork-lift scenario I described is very flexible and could easily be extended or simplified.
+
+To conclude I want to boil down my main metric of success for of this project. At the end of this project I want to demonstrate a robot that can efficiently plan and execute a long sequence of tasks without the need to explicitly enumerate the possible states of objects and actors in the system.
+
+
+
+\addtolength{\textheight}{-10cm}   % This command serves to balance the column lengths
+                                  % on the last page of the document manually. It shortens
+                                  % the textheight of the last page by a suitable amount.
+                                  % This command does not take effect until the next page
+                                  % so it should come on the page before the last. Make
+                                  % sure that you do not shorten the textheight too much.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\bibliography{ref}
+\bibliographystyle{ieeetr}
+
+\end{document}
