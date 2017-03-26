@@ -1,34 +1,36 @@
 
 import numpy as np
 import pyglet
+import collider
+import math
+
 from pyglet.gl import *
-from math import *
 
 from WorkSpace import WorkSpace
 from RRT import RRT
+from robot import Robot
 
 CIRCLE_POINTS = 30
 
 class WorkSpaceWindow(pyglet.window.Window):
-	def __init__(self, ws, rrt, width=800, height=600):
+	def __init__(self, ws, rrt, robot, width=800, height=600):
 		super(WorkSpaceWindow, self).__init__(width, height)
 		self.workspace = ws
 		self.graph = rrt
-		self.label = pyglet.text.Label('Work Space')
-		self.goalNode = None
+		self.robot = robot
+		self.set_caption('Work Space')
 
 
 	def on_draw(self):
 		glClearColor(240,240,240,255)
 		glClear(pyglet.gl.GL_COLOR_BUFFER_BIT)
 
-		## Obsticles
-		obsticle_batch = pyglet.graphics.Batch()
-		for obj in self.workspace.obsticles:
-			verts = self.makeCircle(obj.center[0], obj.center[1], obj.radius)
-			obsticle_batch.add(CIRCLE_POINTS, GL_POLYGON, pyglet.graphics.Group(), ('v2f', verts))
+		## Obstacles
+		obstacle_batch = pyglet.graphics.Batch()
+		for obsticle in self.workspace.obstacles:
+			verts = obsticle.getPoints().flatten()
+			obstacle_batch.add(len(verts)/2, GL_POLYGON, pyglet.graphics.Group(), ('v2f', verts))
 			
-
 		## Tree Lines
 		line_batch = pyglet.graphics.Batch()
 		for node in self.graph.nodes:
@@ -39,16 +41,30 @@ class WorkSpaceWindow(pyglet.window.Window):
 				y2 = node.parent.point[1]
 				line_batch.add(2, GL_LINES, pyglet.graphics.Group(), ('v2f', (x1, y1, x2, y2) ))
 
+		#Robot
+		robot_batch = pyglet.graphics.Batch()
+		self.robot.setState(self.graph.start)
+		verts = self.robot.getPoints().flatten()
+		robot_batch.add(len(verts)/2, GL_LINE_LOOP, pyglet.graphics.Group(), ('v2f', verts ))
+
 		## Path
-		n = self.graph.solution
-		path_batch = pyglet.graphics.Batch()
-		while n.parent != None:
-			x1 = n.point[0]
-			y1 = n.point[1]
-			x2 = n.parent.point[0]
-			y2 = n.parent.point[1]
-			path_batch.add(2, GL_LINES, None, ('v2f', (x1, y1, x2, y2) ))
-			n = n.parent
+		success = self.graph.solution != None
+		if success:
+			n = self.graph.solution
+			path_batch = pyglet.graphics.Batch()
+
+			while n.parent != None:
+				x1 = n.point[0]
+				y1 = n.point[1]
+				x2 = n.parent.point[0]
+				y2 = n.parent.point[1]
+				path_batch.add(2, GL_LINES, None, ('v2f', (x1, y1, x2, y2) ))
+
+				self.robot.setState(n.point)
+				verts = self.robot.getPoints().flatten()
+				robot_batch.add(len(verts)/2, GL_LINE_LOOP, pyglet.graphics.Group(), ('v2f', verts ))
+
+				n = n.parent
 
 
 		start = self.graph.start
@@ -62,31 +78,40 @@ class WorkSpaceWindow(pyglet.window.Window):
 		
 		line_batch.draw()
 		glColor3f(0,0,1)
-		obsticle_batch.draw()
-		glColor3f(0,1,0)
-		path_batch.draw()
+		obstacle_batch.draw()
+		
+		if success:
+			glColor3f(0,1,0)
+			glLineWidth(3)
+			path_batch.draw()
+			glColor3f(0.5,0.5,0.5)
+			glLineWidth(1)
+			robot_batch.draw()
 
 
 	def makeCircle(self, px, py, r):
 		verts = []
 		for i in range(CIRCLE_POINTS):
-			angle = radians(float(i)/CIRCLE_POINTS * 360.0)
-			x = r*cos(angle) + px
-			y = r*sin(angle) + py
+			angle = math.radians(float(i)/CIRCLE_POINTS * 360.0)
+			x = r*math.cos(angle) + px
+			y = r*math.sin(angle) + py
 			verts += [x,y]
 		
 		return verts
-		#return pyglet.graphics.vertex_list(CIRCLE_POINTS, ('v2f', verts))
-
 
 
 if __name__ == '__main__':
 	ws = WorkSpace()
-	ws.readObsticles('obsticles1.csv')
+	ws.readCircleObstacles('obsticles1.csv')
+	ws.readRectangleObstacles('rect.csv')
 
-	rrt = RRT(ws, 15, 20, [[0,800], [0, 600]])
-	goalNode = rrt.findPath(np.array([10, 10]), np.array([400, 400]))
+	start = np.array([15, 15, 0])
+	goal = np.array([400, 500, 0])
+	limits = [[0,800], [0, 600], [0, math.pi]]
+	rrt = RRT(ws, 15, 20, limits)
+	robot = Robot()
+	goalNode = rrt.findPath(start, goal, robot)
 
-	window = WorkSpaceWindow(ws, rrt)
+	window = WorkSpaceWindow(ws, rrt, robot)
 
 	pyglet.app.run()

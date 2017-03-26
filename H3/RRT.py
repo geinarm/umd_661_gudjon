@@ -2,7 +2,6 @@ import numpy as np
 import random
 
 from WorkSpace import WorkSpace
-from collider import Collider
 
 class Node:
 
@@ -18,11 +17,10 @@ class RRT:
 		self.epsilon = eps
 		self.goalRadius = goalR
 		self.limits = limits
+		self.dimentions = len(limits)
 
 
-	def closestNode(self, x, y):
-		
-		point = np.array([x, y])
+	def closestNode(self, point):
 		minDist = 9999
 		closest = None
 		for node in self.nodes:
@@ -39,7 +37,7 @@ class RRT:
 		return dist < self.goalRadius
 
 
-	def findPath(self, start, goal, maxNodes=1000):
+	def findPath(self, start, goal, robot, maxNodes=1000):
 		self.nodes = []
 		self.start = start
 		self.goal = goal
@@ -48,14 +46,20 @@ class RRT:
 		self.nodes.append(Node(start, None))
 		done = False
 		
+
 		while len(self.nodes) < maxNodes:
 			##Pick random point
-			x = random.uniform(self.limits[0][0], self.limits[0][1])
-			y = random.uniform(self.limits[1][0], self.limits[1][1])
-			point = np.array([x, y])
+			if random.random() > 0.95:
+				point = goal
+			else:
+				values = []
+				for i in range(self.dimentions):
+					val = random.uniform(self.limits[i][0], self.limits[i][1])
+					values.append(val)
+				point = np.array(values)
 
 			##Find closest node
-			n = self.closestNode(x, y)
+			n = self.closestNode(point)
 
 			##Push back to max reach
 			v = point-n.point
@@ -63,7 +67,11 @@ class RRT:
 			point = n.point+v*self.epsilon
 
 			##Check for collision
-			if not self.ws.pointInCollision(point):
+			robot.setState(point)
+			collider = robot.getCollider()
+
+			#if not self.ws.pointInCollision(point):
+			if not self.ws.inCollision(collider):
 				##Add new node
 				newNode = Node(point, n)
 				self.nodes.append(newNode)
