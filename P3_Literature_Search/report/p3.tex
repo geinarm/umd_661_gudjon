@@ -16,6 +16,7 @@
 \usepackage{amsmath}
 \usepackage{lipsum}
 \usepackage{hyperref}
+\usepackage{flushend}
 
 \usepackage{graphicx}
 \graphicspath{ {img/} }
@@ -65,41 +66,36 @@ Currently, in production environments these problems are avoided by structuring 
 \label{related_work}
 \section{Related Work}
 
-This implementation combines two problems that each has a lot of related literature. The first is motion planning for nonholonomic vehicles, such as cars that can not travel in any direction and can not turn on the spot. The second is the problem of integrated task and motion planning (TAMP). This problem comes up when a robot tries to plan and execute a long sequence of actions in an unstructured space. An action may change the configuration space in such a way that it interferes with later actions. This problem comes in many flavors and is related to the problem of manipulation planning and navigation among movable obstacles (NAMO). 
-
-In this section I will discuss some of the related work for each of these problems separately.
+This implementation combines two problems that each has a lot of related literature. The first is motion planning for nonholonomic vehicles, such as cars that can not travel in any direction and can not turn on the spot. The second is the problem of integrated task and motion planning (TAMP). In this section I will discuss some of the related work for each of these problems separately.
 
 \subsection{Task and motion planning (TAMP)}
 
-A verity of methods have been proposed to tackle some aspect of this problem, but there are no obvious solutions that can be directly applied. 
-\cite{hpn2} describes a robot that moves a number of object around a confined space while making sure those objects stay out of the sweep area of future actions. \cite{waipointSequence} describes how a motion planner can use knowledge of the task plan to optimize the path chosen for the current task so the motion forms a more continuous sequence. \cite{asymov} describes a planner that bridges the gap between symbolic and geometric reasoning so that the task planner can deal with geometric preconditions and effects of actions. \cite{ffrob} proposes a heuristic method for efficient forward search task planning while taking geometric and kinematic constraints into account.
+This problem comes up when a robot tries to plan and execute a long sequence of actions in an unstructured space. An action may change the configuration space in such a way that it interferes with later actions. A verity of methods have been proposed to tackle some aspect of this problem, but there are no obvious solutions that can be directly applied. 
 
-Based on my preliminary research it seams that aSyMov\cite{asymov}\cite{asymov2} is the most mature implementation that directly deals with this specific problem. 
+Asymov\cite{asymov}\cite{asymov2} is perhaps the most documented implementation that deals directly with merging symbolic and geometric reasoning. The work on asymov gives a lot of insight into the problem and provides some good examples, however it seams challenging to apply to practical implementations. Later work by the same authors \cite{tomas_14} describes a more general framework that seams easier to apply to new domains. It works by first constructing a symbolic plan skeleton and delays any geometric decisions (such as where to place objects), it then solves a constraint satisfaction problem (CSP) to fill in the blanks of the plan. I believe that some variation of this method might be a good fit for my forklift.
+
+My plan is to implement the forklift with the capability to rearrange cargo pallets as needed to complete it's task. It's easy for a symbolic task planner to construct such a plan, but with geometric and dynamic constraints it is much more challenging. This is known as the problem of navigating among movable obstacles (NAMO) \cite{stilman_namo}\cite{stilman_namo2}\cite{stilman_namo3}. This is an especially brutal version of TAMP. In NAMO a robot must navigate an environment full of obstacles that the robot is capable of manipulating to suit its needs, e.g move things out of the way to open a path. In high dimensional configuration spaces this is close to impossible, but the configuration space of the forklift can be projected down to a 3 dimensional configuration space $(x, y, \theta)$, without loosing much information. This makes the problem much more reasonable.
+
+\cite{hpn2} describes a robot that moves a number of objects around a confined space while making sure those objects stay out of the sweep area of future actions. \cite{waipointSequence} describes how a motion planner can use knowledge of the task plan to optimize the path chosen for the current task so the motion forms a more continuous sequence. \cite{asymov} describes a planner that bridges the gap between symbolic and geometric reasoning so that the task planner can deal with geometric preconditions and effects of actions. \cite{ffrob} proposes a heuristic method for efficient forward search task planning while taking geometric and kinematic constraints into account.
+
 
 
 \subsection{Motion planning for nonholonomic vehicles}
 
-For motion planning in high dimensional configuration spaces, rapidly-exploring random trees (RRT) is commonly used. The basic implementation does not offer an optimal solution or account for dynamic constraints of the vehicle, but there are many extensions that offer those properties.
+For motion planning in high dimensional configuration spaces, rapidly-exploring random trees (RRT) is commonly used. The basic implementation does not offer an optimal solution or account for dynamic constraints of the vehicle, but there are many extensions that offer those properties. \cite{dustin13}\cite{luigi_rrt}\cite{lqr_rrt}.
+
 
 Another approach is to probabilistic road-maps (PRM). PRM's are best suited for scenarios where the same environment is queried multiple times and routs are often reused.
 
-Since the forklift is designed to operate in a semi-structured environment where a floor map is provided, but obstacles may be placed anywhere, a mix of graph search and random sampling methods could be used for motion planning. A precomputed graph can be searched to find paths over long distances while RRT can be used locally find paths around obstacles or to interact with dynamic objects in the environment. \cite{prm_rrt} proposes a method of combining PRM and RRT to gain a significant performance boost when querying the same environment multiple times, while maintaining flexibility of RRT.
-\cite{hentschel07} describes and implementation that uses a set of predefined way-points to plan a route. After a sequence of way-points have been choose a smooth curve is computed to account for the vehicles dynamic constraints. This a method provides a deterministic behavior that desirable in safety critical domains.
+Since the forklift is designed to operate in a semi-structured environment where a floor map can be provided, but obstacles may be placed anywhere, a mix of graph search and random sampling methods could be used for motion planning. A precomputed graph can be searched to find paths over long distances while RRT can be used locally find paths around obstacles or to interact with dynamic objects in the environment (such as aligning with cargo pallets). \cite{prm_rrt} proposes a method of combining PRM and RRT to gain a significant performance boost when querying the same environment multiple times, while maintaining flexibility of RRT.
+
+\cite{hentschel07} describes and implementation that uses a set of predefined way-points to plan a route. After a sequence of way-points have been chosen, a smooth curve is computed to account for the vehicles dynamic constraints. This a method provides a deterministic behavior that is desirable in safety critical domains. 
+Although safety is important to considerer when deploying these types of systems, for my implementation I will not be focusing on those aspects.
 
 \section{Conclusion}
 
-I have laid out an ambitious plan to implement an intelligent, autonomous fork-lift, operating in a complicated environment. My plan is demonstrate all of the concepts I explained above, but I  recognize that every plan is likely to change on its first encounter with implementation. Luckily I think that the fork-lift scenario I described is very flexible and could easily be extended or simplified.
+I have laid out an ambitious plan to implement an intelligent, autonomous fork-lift, operating in a complicated environment. I believe this is a practical implementation that combines many challenging topics from the field of AI and robotics. While there is much work on individual concepts used for this implementation, I don't think there are may instances where they have been successfully combined. Since the forklift as a very capable manipulator while also relatively simple compared to other mobile manipulators, I think it is a good candidate for combining these complex ideas.
 
-To conclude I want to boil down my main metric of success for of this project. At the end of this project I want to demonstrate a robot that can efficiently plan and execute a long sequence of tasks without the need to explicitly enumerate the possible states of objects and actors in the system.
-
-
-
-\addtolength{\textheight}{-10cm}   % This command serves to balance the column lengths
-                                  % on the last page of the document manually. It shortens
-                                  % the textheight of the last page by a suitable amount.
-                                  % This command does not take effect until the next page
-                                  % so it should come on the page before the last. Make
-                                  % sure that you do not shorten the textheight too much.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
