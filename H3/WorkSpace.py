@@ -6,8 +6,9 @@ from collider import CircleCollider, RectangleCollider
 
 class WorkSpace:
 
-	def __init__(self):
+	def __init__(self, limits):
 		self.obstacles = []
+		self.limits = limits
 
 
 	def addObsticle(self, collider):
@@ -26,6 +27,18 @@ class WorkSpace:
 					return True
 
 		return False
+
+
+	def pointInBounds(self, point):
+		for i in xrange(len(point)):
+			value = point[i]
+			minVal = self.limits[i][0]
+			maxVal = self.limits[i][1]
+
+			if value < minVal or value > maxVal:
+				return False
+
+		return True
 
 
 	def inCollision(self, collider):

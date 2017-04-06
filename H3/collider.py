@@ -1,6 +1,6 @@
 
 import numpy as np
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon, Point, LineString
 from shapely import affinity, geometry
 
 
@@ -39,3 +39,11 @@ class RectangleCollider(ShapeCollider):
 		super(RectangleCollider, self).__init__(p)
 
 
+class TrajectoryCollider(ShapeCollider):
+	def __init__(self, tj, width):
+
+		shape = LineString(tj.points)
+		shape = shape.buffer(width/2, cap_style=2)
+
+		super(TrajectoryCollider, self).__init__(shape)
+		
