@@ -107,7 +107,7 @@ class TriangleRobot(Robot):
 		calc = DubinsCalculator(5)
 		path = calc.calculatePath(p, q)
 
-		dt = 0.5
+		dt = 0.1
 		numPoints = eps/dt
 		points = np.empty((0, 3))
 		pos = p

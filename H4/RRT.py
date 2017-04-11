@@ -12,6 +12,17 @@ class Node:
 		self.trajectory = tj
 
 
+	def getPlan(self):
+		plan = []
+		n = self
+		while(n.parent != None):
+			plan.append(n)
+			n = n.parent
+
+		plan.reverse()
+		return plan
+
+
 class RRT:
 
 	def __init__(self, ws, eps, goalR, limits):
@@ -38,14 +49,13 @@ class RRT:
 
 
 	def inGoalRegion(self, node, robot):
-		dist = np.linalg.norm(node.point-self.goal)
-		thetaErr = abs(node.point[2]-self.goal[2])
-		err = dist+thetaErr
-		#dist = robot.getDistance(node.point, self.goal)
-		return (dist < self.goalRadius) and (thetaErr < 0.2)
+		pos1 = node.point[0:2]
+		pos2 = self.goal[0:2]
+		dist = np.linalg.norm(pos1-pos2)
+		return (dist < self.goalRadius)
 
 
-	def findPath(self, start, goal, robot, maxNodes=1000):
+	def findPath(self, start, goal, robot, maxNodes=1000, maxSamples=10000):
 		self.nodes = []
 		self.start = start
 		self.goal = goal
@@ -57,14 +67,15 @@ class RRT:
 		#MyRand = [ [20, 80, 4], [70, 50, 5], [75, 30, 4] ]
 		#ri = 0
 		ng = 0
-		while len(self.nodes) < maxNodes:
+		samples = 0
+		while len(self.nodes) < maxNodes and samples < maxSamples:
 			numNodes = len(self.nodes)
-			pg = (float(numNodes)/maxNodes) * 0.3
+			pg = (float(numNodes)/maxNodes) * 0.1
 			useGoal = False
 			##Pick random point
 			if random.random() > (1.0-pg):
 				ng += 1
-				print('Use goal', ng)
+				#print('Use goal', ng)
 				useGoal = True
 				point = goal
 			else:
@@ -74,20 +85,15 @@ class RRT:
 					values.append(val)
 				point = np.array(values)
 
+			samples += 1
 			##Find closest node
-			if useGoal:
-				n = self.closestNode(point, robot, 5)
-			else:
-				n = self.closestNode(point, robot)
+			n = self.closestNode(point, robot)
 
 			##Extend node towards sample point
-			z = robot.extend(n.point, point)
-			if useGoal and np.linalg.norm(n.point-point)<30:
-				trajectory = robot.steer(n.point, z, 1000)
-				print('Just connect!', trajectory.start, trajectory.end)
-				print(self.inGoalRegion(trajectory.end, ))
-			else:
-				trajectory = robot.steer(n.point, z, self.epsilon)
+			goalDist = robot.getDistance(n.point, goal)
+			z = robot.extend(n.point, point, self.epsilon)
+			eps = min(goalDist, self.epsilon)
+			trajectory = robot.steer(n.point, z, eps)
 
 			if trajectory == None:
 				continue
@@ -95,18 +101,19 @@ class RRT:
 
 			##Check for collision
 			if not self.ws.pointInBounds(newNode.point):
-				continue;
+				continue
 
 			robot.setState(newNode.point)
 			collider = robot.getCollider()
 			if self.ws.inCollision(collider):
 				continue
-			pathCollider = TrajectoryCollider(trajectory, 5.0)
+			pathCollider = TrajectoryCollider(trajectory, 0.01)
 			if self.ws.inCollision(pathCollider):
 				continue
 
 			##Add new node
 			self.nodes.append(newNode)
+			#print(newNode.point)
 
 			##Check goal
 			if self.inGoalRegion(newNode, robot):

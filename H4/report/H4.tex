@@ -1,0 +1,42 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{mwe}
+\usepackage[]{mcode}
+%\usepackage{lingmacros}
+%\usepackage{tree-dvips}
+%\usepackage{blindtext}
+%\usepackage[utf8]{inputenc}
+\begin{document}
+
+\title{ENPM661 - Homework 4}
+\author{Gudjon Einar Magnusson}
+
+\maketitle
+
+\section{Steering Function}
+
+For my steering function that tries to steer the non-holonomic vehicle towards a given sample point, I use a very rough approximation. My function will arrive close to the target velocity and point the vehicle roughly towards the target coordinates. It makes no effort to arrive precisely on the coordinates or to align $\theta$ and $\omega$. I think this is justifiable since the goal region is relatively large and does not consider the vehicle heading or velocity.
+
+The first step of the function is to estimate the time, $t$, it will take to cover the $eps$ distance.
+
+\begin{equation} \label{eq_t}
+	t = eps / \frac{v + v'}{2}
+\end{equation}
+
+The acceleration input, $a$ is then estimated by dividing the difference in velocity with the time
+
+\begin{equation}
+	a = \frac{v' - v}{t}
+\end{equation}
+
+Finally the steering input, $\gamma$, is calculated such that it will bring $\delta$ to zero, where $\delta$ is the difference between the current vehicle heading and the heading that points directly at the target. 
+
+\begin{equation}
+	\gamma = \delta /t^2 - \omega / t
+\end{equation}
+
+Of course after the robot has moved, the heading towards the target is not the same as when we started, but I´m counting on it being close enough so that we will have made a reasonable step forward.
+
+
+\end{document}
