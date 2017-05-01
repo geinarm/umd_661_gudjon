@@ -1,0 +1,54 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{mwe}
+\usepackage[]{mcode}
+
+%\usepackage{lingmacros}
+%\usepackage{tree-dvips}
+%\usepackage{blindtext}
+%\usepackage[utf8]{inputenc}
+\begin{document}
+
+\title{ENPM661 - Quiz 4}
+\author{Gudjon Einar Magnusson}
+
+\maketitle
+
+\section{} %1
+
+\paragraph{Mirorobotics} deals with small robots. Something that might fit in the palm of your hand or the tip of your finger.
+
+\paragraph{Nanorobotics} deals with even smaller robots, something that might flow through you wains and work with individual cells. Largely theoretical but some cool stuff if happening in the field of medical science.
+
+\paragraph{Molecular robotics} is at the fringe of chemistry. Deals with controlling or harnessing the processes operating on individual molecules or atoms.
+
+
+\section{} %2
+
+Figure \ref{fig:r1_plan} shows a scenario where two robots need to coordinate to pass each other in a narrow hallway. A decoupled multi-robot planner would not be able to handle this situation.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.8\textwidth]{img/2robot_planning}
+\caption{R1 is trying to reach G1 and R2 is trying to reach G2}
+\label{fig:r1_plan}
+\end{figure}
+
+
+\section{} %3
+
+D* Lite is designed for dynamic re-planning in a discrete grid. Field D* does mostly the same thing, it stores the map in a grid based data structure but the robot is not constrained to travel along the grid. Field D* uses interpolation to produce smooth trajectories through a discretized world map.
+
+
+\section{} %4
+
+Level set methods are based on estimating the contours of the reachable set of states. The contours are expanded outwards as we travel through time (or some other dimension), by calculating the controls at a few points along the boundary and interpolating the behavior between them. This method is good for planning in domains with complicated dynamics, such fluid flow or wind turbulence.
+
+
+\section{} %5
+
+An inconsistent node is a node whose cost values do not reflect new information elsewhere in the graph. If a node is rewired to take advantage of a newly discovered shortcut, descendant nodes are inconsistent until that information has been percolated through the graph.
+
+
+\end{document}
